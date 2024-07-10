@@ -6,11 +6,12 @@ mod misc;
 mod card;
 
 use misc::mouse;
-use card::{primitives, zone};
+use card::{factory, primitives, zone};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins((mouse::MousePlugin, primitives::CardPlugin, zone::ZonePlugin))
+        .add_plugins(mouse::MousePlugin)
+        .add_plugins((factory::FactoryPlugin, primitives::CardPlugin, zone::ZonePlugin))
         .run();
 }

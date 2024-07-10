@@ -14,17 +14,17 @@ impl Plugin for CardPlugin {
 
 #[derive(Component, Debug)]
 pub struct Card {
-    id: u16,
+    pub id: u16,
 }
 
 #[derive(Component, Debug)]
 pub struct Target(pub Vec2);
 
 #[derive(Bundle)]
-struct CardBundle {
-    card: Card,
-    mesh: MaterialMesh2dBundle<ColorMaterial>,
-    target: Target,
+pub struct CardBundle {
+    pub card: Card,
+    pub mesh: MaterialMesh2dBundle<ColorMaterial>,
+    pub target: Target,
 }
 
 const CARD_WIDTH: f32 = 63.;
