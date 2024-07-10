@@ -103,5 +103,6 @@ fn create_card(
             joining: true,
             index: size.0,
         });
+        state.card_id += 1;
      }
 }

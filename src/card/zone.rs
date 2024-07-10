@@ -3,18 +3,20 @@ use bevy::{
     ecs::schedule::common_conditions::on_event,
 };
 use std::collections::HashMap;
+use std::collections::HashSet;
 
-use crate::card::primitives::Card;
+use crate::card::primitives::{Card, CardDims, Target};
 
 pub struct ZonePlugin;
 
 impl Plugin for ZonePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<ZoneUpdate>()
-           .add_systems(Update,
-               update_zone_info.run_if(on_event::<ZoneUpdate>()))
-           .add_systems(Update,
-               update_card_indices.run_if(on_event::<ZoneUpdate>()));
+           .add_systems(Update, (
+                   update_zone_info,
+                   update_card_indices,
+                   rebase_updated_zones,
+            ).chain().run_if(on_event::<ZoneUpdate>()));
     }
 }
 
@@ -81,6 +83,29 @@ pub fn zone_index_to_posn(
     index: &ZoneIndex,
     card_dims: &Vec2,
 ) -> Vec2 {
-    let x = center.0.x - (size.0 as f32 / 2. - 0.5) * card_dims.x;
-    Vec2::new(x + card_dims.x * index.0 as f32, center.0.y)
+    let width = card_dims.x + 20.;
+    let steps = size.0 as f32 / 2. - 0.5;
+    let x = center.0.x + (index.0 as f32 - steps) * width;
+    Vec2::new(x, center.0.y)
+}
+
+fn rebase_updated_zones(
+    dims: Res<CardDims>,
+    mut ev_zone_update: EventReader<ZoneUpdate>,
+    zone_query: Query<(&Zone, &ZoneCenter, &ZoneIndex)>,
+    mut card_query: Query<(&mut Target, &Zone, &ZoneIndex), With<Card>>,
+) {
+    // zones denotes the list of zones that have been updated
+    let zones = ev_zone_update.read().map(|x| x.zone).collect::<HashSet<_>>();
+    for (mut card_target, card_zone, card_posn) in card_query.iter_mut() {
+        if zones.contains(card_zone) {
+            for (zone, center, size) in zone_query.iter() {
+                if zone == card_zone {
+                    card_target.0 = zone_index_to_posn(
+                        center, size, card_posn, &dims.get_dims()
+                    );
+                }
+            }
+        }
+    }
 }
