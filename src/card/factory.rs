@@ -20,12 +20,27 @@ impl Plugin for FactoryPlugin {
 // Moved to a startup system as we can't know if the dims will be inited before
 fn factory_init(mut commands: Commands) {
     commands.init_resource::<FactoryState>();
+
+    commands.spawn(ZoneBundle {
+        zone: Zone::Hand,
+        center: ZoneCenter(Vec2::new(0., -100.)),
+        size: ZoneIndex(0),
+    });
+    commands.spawn(ZoneBundle {
+        zone: Zone::Deck,
+        center: ZoneCenter(Vec2::new(500., 0.)),
+        size: ZoneIndex(0),
+    });
+    commands.spawn(ZoneBundle {
+        zone: Zone::Play,
+        center: ZoneCenter(Vec2::new(0., 0.)),
+        size: ZoneIndex(0),
+    });
 }
 
 #[derive(Debug, Event)]
 pub struct CreateCard {
     pub zone: Zone,
-    pub posn: Vec2,
 }
 
 #[derive(Resource, Debug)]
@@ -57,26 +72,30 @@ impl FromWorld for FactoryState {
 
 fn create_card(
     mut state: ResMut<FactoryState>,
+    dims: Res<CardDims>,
     mut commands: Commands,
     mut ev_cc: EventReader<CreateCard>,
     mut ev_zu: EventWriter<ZoneUpdate>,
-    query: Query<(&Zone, &ZoneIndex), With<ZoneCenter>>,
+    query: Query<(&Zone, &ZoneCenter, &ZoneIndex)>,
 ) {
     for ev in ev_cc.read() {
-        let Some((_zone, size)) = query.iter().find(|(zone,_size)|
-            **zone == ev.zone
-        ) else {
+        let Some((_zone, center, size)) =
+            query.iter().find(|(zone, _center, _size)| **zone == ev.zone)
+        else {
             panic!("missing zone")
         };
+        let posn = zone_index_to_posn(
+            center, &ZoneIndex(size.0 + 1), size, &dims.get_dims()
+        );
         commands.spawn(CardBundle {
             card: Card { id: state.card_id },
             mesh: MaterialMesh2dBundle {
                 mesh: state.mesh.clone(),
                 material: state.material.clone(),
-                transform: Transform::from_translation(ev.posn.extend(0.)),
+                transform: Transform::from_translation(posn.extend(0.)),
                      ..default()
              },
-             target: Target(ev.posn),
+             target: Target(posn),
          }).insert(ev.zone).insert(size.clone());
 
         ev_zu.send(ZoneUpdate {

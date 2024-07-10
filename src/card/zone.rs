@@ -19,15 +19,14 @@ impl Plugin for ZonePlugin {
 }
 
 #[derive(Bundle)]
-struct ZoneBundle {
-    zone: Zone,
-    center: ZoneCenter,
-    size: ZoneIndex,
+pub struct ZoneBundle {
+    pub zone: Zone,
+    pub center: ZoneCenter,
+    pub size: ZoneIndex,
 }
 
 #[derive(Clone, Component, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Zone {
-    Float,
     Deck,
     Hand,
     Play,
@@ -74,4 +73,14 @@ fn update_card_indices(
             }
         }
     }
+}
+
+pub fn zone_index_to_posn(
+    center: &ZoneCenter,
+    size: &ZoneIndex,
+    index: &ZoneIndex,
+    card_dims: &Vec2,
+) -> Vec2 {
+    let x = center.0.x - (size.0 as f32 / 2. - 0.5) * card_dims.x;
+    Vec2::new(x + card_dims.x * index.0 as f32, center.0.y)
 }
