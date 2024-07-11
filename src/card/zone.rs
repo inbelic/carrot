@@ -1,6 +1,7 @@
 use bevy::{
     prelude::*,
     ecs::schedule::common_conditions::on_event,
+    math::bounding::Aabb2d,
 };
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -42,6 +43,7 @@ pub struct ZoneIndex(pub u8);
 
 #[derive(Debug, Event)]
 pub struct ZoneUpdate {
+    pub entity: Entity,
     pub zone: Zone,
     pub joining: bool,
     pub index: u8,
@@ -64,18 +66,23 @@ fn update_zone_info(
 
 fn update_card_indices(
     mut ev_zone_update: EventReader<ZoneUpdate>,
-    mut query: Query<(&Zone, &mut ZoneIndex), With<Card>>,
+    mut query: Query<(Entity, &mut Zone, &mut ZoneIndex), With<Card>>,
 ) {
     for update in ev_zone_update.read() {
-        for (zone, mut z_index) in query.iter_mut() {
-            if update.joining && *zone == update.zone && update.index < z_index.0 {
-                z_index.0 -= 1;
-            } else if !update.joining && *zone == update.zone && z_index.0 < update.index {
+        for (e, mut zone, mut z_index) in query.iter_mut() {
+            if update.entity == e {
+                *zone = update.zone;
+                z_index.0 = update.index;
+            } else if update.joining && *zone == update.zone && update.index <= z_index.0 {
                 z_index.0 += 1;
+            } else if !update.joining && *zone == update.zone && update.index < z_index.0 {
+                z_index.0 -= 1;
             }
         }
     }
 }
+
+const CARD_SPACING: f32 = 20.;
 
 pub fn zone_index_to_posn(
     center: &ZoneCenter,
@@ -83,7 +90,7 @@ pub fn zone_index_to_posn(
     index: &ZoneIndex,
     card_dims: &Vec2,
 ) -> Vec2 {
-    let width = card_dims.x + 20.;
+    let width = card_dims.x + CARD_SPACING;
     let steps = size.0 as f32 / 2. - 0.5;
     let x = center.0.x + (index.0 as f32 - steps) * width;
     Vec2::new(x, center.0.y)
@@ -108,4 +115,18 @@ fn rebase_updated_zones(
             }
         }
     }
+}
+
+pub fn within_zone(
+    posn: &Vec2,
+    center: &ZoneCenter,
+    size: &ZoneIndex,
+    card_dims: &Vec2,
+) -> bool {
+    let width = card_dims.x + CARD_SPACING;
+    let steps = size.0 as f32 / 2. - 0.5;
+    let zone_bounds = Aabb2d::new(
+        center.0, Vec2::new(width * steps.max(0.5), card_dims.y / 2.)
+    );
+    *posn == zone_bounds.closest_point(*posn)
 }

@@ -87,7 +87,7 @@ fn create_card(
         let posn = zone_index_to_posn(
             center, &ZoneIndex(size.0 + 1), size, &dims.get_dims()
         );
-        commands.spawn(CardBundle {
+        let e = commands.spawn(CardBundle {
             card: Card { id: state.card_id },
             mesh: MaterialMesh2dBundle {
                 mesh: state.mesh.clone(),
@@ -96,9 +96,11 @@ fn create_card(
                      ..default()
              },
              target: Target(posn),
-         }).insert(ev.zone).insert(size.clone());
+         }).insert(ev.zone).insert(size.clone())
+        .id();
 
         ev_zu.send(ZoneUpdate {
+            entity: e,
             zone: ev.zone,
             joining: true,
             index: size.0,
