@@ -26,6 +26,8 @@ pub struct ZoneBundle {
     pub zone: Zone,
     pub center: ZoneCenter,
     pub size: ZoneIndex,
+    pub spacing: ZoneSpacing,
+    pub dir: ZoneDir,
 }
 
 #[derive(Clone, Component, Copy, Debug, Eq, Hash, PartialEq)]
@@ -40,6 +42,12 @@ pub struct ZoneCenter(pub Vec2);
 
 #[derive(Component, Clone, Copy, Debug)]
 pub struct ZoneIndex(pub u8);
+
+#[derive(Component, Debug)]
+pub enum ZoneDir { Horiz, Vert }
+
+#[derive(Component, Debug)]
+pub struct ZoneSpacing(pub f32);
 
 #[derive(Debug, Event)]
 pub struct ZoneUpdate {
@@ -82,34 +90,42 @@ fn update_card_indices(
     }
 }
 
-const CARD_SPACING: f32 = 5.;
-
 pub fn zone_index_to_posn(
     center: &ZoneCenter,
     size: &ZoneIndex,
     index: &ZoneIndex,
+    spacing: &ZoneSpacing,
+    dir: &ZoneDir,
     card_dims: &Vec2,
 ) -> Vec2 {
-    let width = card_dims.x + CARD_SPACING;
-    let steps = size.0 as f32 / 2. - 0.5;
-    let x = center.0.x + (index.0 as f32 - steps) * width;
-    Vec2::new(x, center.0.y)
+    match dir {
+        ZoneDir::Horiz => {
+            let width = card_dims.x + spacing.0;
+            let steps = size.0 as f32 / 2. - 0.5;
+            let x = center.0.x + (index.0 as f32 - steps) * width;
+            Vec2::new(x, center.0.y)
+        },
+        ZoneDir::Vert => {
+            let y = center.0.y - (index.0 as f32) * spacing.0;
+            Vec2::new(center.0.x, y)
+        },
+    }
 }
 
 fn rebase_updated_zones(
     dims: Res<CardDims>,
     mut ev_zone_update: EventReader<ZoneUpdate>,
-    zone_query: Query<(&Zone, &ZoneCenter, &ZoneIndex)>,
+    zone_query: Query<(&Zone, &ZoneCenter, &ZoneIndex, &ZoneSpacing, &ZoneDir)>,
     mut card_query: Query<(&mut Target, &Zone, &ZoneIndex), With<Card>>,
 ) {
     // zones denotes the list of zones that have been updated
     let zones = ev_zone_update.read().map(|x| x.zone).collect::<HashSet<_>>();
     for (mut card_target, card_zone, card_posn) in card_query.iter_mut() {
         if zones.contains(card_zone) {
-            for (zone, center, size) in zone_query.iter() {
+            for (zone, center, size, spacing, dir) in zone_query.iter() {
                 if zone == card_zone {
                     card_target.0 = zone_index_to_posn(
-                        center, size, card_posn, &dims.get_dims()
+                        center, size, card_posn, spacing, dir, &dims.get_dims()
                     );
                 }
             }
@@ -121,12 +137,26 @@ pub fn within_zone(
     posn: &Vec2,
     center: &ZoneCenter,
     size: &ZoneIndex,
+    spacing: &ZoneSpacing,
+    dir: &ZoneDir,
     card_dims: &Vec2,
 ) -> bool {
-    let width = card_dims.x + CARD_SPACING;
-    let steps = size.0 as f32 / 2. - 0.5;
-    let zone_bounds = Aabb2d::new(
-        center.0, Vec2::new(width * steps.max(0.5), card_dims.y / 2.)
-    );
-    *posn == zone_bounds.closest_point(*posn)
+    match dir {
+        ZoneDir::Horiz => {
+            let width = card_dims.x + spacing.0;
+            let steps = size.0 as f32 / 2. - 0.5;
+            let zone_bounds = Aabb2d::new(
+                center.0, Vec2::new(width * steps.max(0.5), card_dims.y / 2.)
+            );
+            *posn == zone_bounds.closest_point(*posn)
+        },
+        ZoneDir::Vert => {
+            let half_height = (card_dims.y + (size.0 as f32) * spacing.0) / 2.;
+            let zone_bounds = Aabb2d::new(
+                Vec2::new(center.0.x, center.0.y - half_height),
+                Vec2::new(card_dims.x / 2., half_height)
+            );
+            *posn == zone_bounds.closest_point(*posn)
+        },
+    }
 }

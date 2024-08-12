@@ -24,16 +24,22 @@ fn factory_init(mut commands: Commands) {
         zone: Zone::Hand,
         center: ZoneCenter(Vec2::new(0., -20.)),
         size: ZoneIndex(0),
-    });
-    commands.spawn(ZoneBundle {
-        zone: Zone::Deck,
-        center: ZoneCenter(Vec2::new(50., 0.)),
-        size: ZoneIndex(0),
+        spacing: ZoneSpacing(1.),
+        dir: ZoneDir::Horiz,
     });
     commands.spawn(ZoneBundle {
         zone: Zone::Play,
         center: ZoneCenter(Vec2::new(0., 0.)),
         size: ZoneIndex(0),
+        spacing: ZoneSpacing(1.),
+        dir: ZoneDir::Horiz,
+    });
+    commands.spawn(ZoneBundle {
+        zone: Zone::Deck,
+        center: ZoneCenter(Vec2::new(50., 0.)),
+        size: ZoneIndex(0),
+        spacing: ZoneSpacing(1.),
+        dir: ZoneDir::Vert,
     });
 }
 
@@ -74,16 +80,16 @@ fn create_card(
     mut commands: Commands,
     mut ev_cc: EventReader<CreateCard>,
     mut ev_zu: EventWriter<ZoneUpdate>,
-    query: Query<(&Zone, &ZoneCenter, &ZoneIndex)>,
+    query: Query<(&Zone, &ZoneCenter, &ZoneIndex, &ZoneSpacing, &ZoneDir)>,
 ) {
     for ev in ev_cc.read() {
-        let Some((_zone, center, size)) =
-            query.iter().find(|(zone, _center, _size)| **zone == ev.zone)
+        let Some((_zone, center, size, spacing, dir)) =
+            query.iter().find(|(zone, _, _, _, _)| **zone == ev.zone)
         else {
             panic!("missing zone")
         };
         let posn = zone_index_to_posn(
-            center, &ZoneIndex(size.0 + 1), size, &dims.get_dims()
+            center, &ZoneIndex(size.0 + 1), size, spacing, dir, &dims.get_dims()
         );
         let e = commands.spawn(CardBundle {
             card: Card { id: state.card_id },
