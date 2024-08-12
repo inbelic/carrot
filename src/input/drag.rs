@@ -25,7 +25,7 @@ impl Plugin for DragPlugin {
 }
 
 #[derive(Resource, Debug, Default)]
-struct Selected(Option<(Entity, zone::Zone)>);
+struct Selected(Option<(Entity, zone::Zone, zone::ZoneIndex)>);
 
 fn selected(selected: Res<Selected>) -> bool { selected.0.is_some() }
 fn deselected(selected: Res<Selected>) -> bool { selected.0.is_none() }
@@ -42,7 +42,7 @@ fn select_card(
         );
         let mouse_posn = mouse.get_posn();
         if mouse_posn == card_bounds.closest_point(mouse_posn) {
-            selected.0 = Some((e, zone.clone()));
+            selected.0 = Some((e, zone.clone(), *z_idx));
             ev_zu.send(zone::ZoneUpdate {
                 entity: e,
                 zone: zone.clone(),
@@ -60,19 +60,21 @@ fn deselect_card(
     mut ev_zu: EventWriter<zone::ZoneUpdate>,
     mut selected: ResMut<Selected>,
 ) {
-    let (e, old_zone) = selected.0.unwrap();
+    let (e, old_zone, z_idx) = selected.0.unwrap();
     let mut new_zone = old_zone;
+    let mut new_index = z_idx.0;
     let mouse_posn = mouse.get_posn();
     for (zone, center, size) in zone_query.iter() {
         if zone::within_zone(&mouse_posn, center, size, &dims.get_dims()) {
             new_zone = zone.clone();
+            new_index = size.0;
         }
     }
     ev_zu.send(zone::ZoneUpdate {
         entity: e,
         zone: new_zone,
         joining: true,
-        index: 0,
+        index: new_index,
     });
     selected.0 = None;
 }
@@ -82,7 +84,7 @@ fn update_card_target(
     selected: Res<Selected>,
     mut query: Query<&mut Target>,
 ) {
-    let (entity, _zone) = selected.0.unwrap();
+    let (entity, _zone, _z_idx) = selected.0.unwrap();
     if let Ok(mut target) = query.get_mut(entity) {
         target.0 = mouse.get_posn();
     }

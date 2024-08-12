@@ -38,7 +38,7 @@ pub enum Zone {
 #[derive(Component, Debug)]
 pub struct ZoneCenter(pub Vec2);
 
-#[derive(Component, Clone, Debug)]
+#[derive(Component, Clone, Copy, Debug)]
 pub struct ZoneIndex(pub u8);
 
 #[derive(Debug, Event)]
