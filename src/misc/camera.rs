@@ -13,8 +13,6 @@ impl Plugin for CameraPlugin {
 #[derive(Component)]
 pub struct MainCamera;
 
-pub const CAMERA_HEIGHT: f32 = 100.;
-
 fn setup(mut commands: Commands) {
     // camera
     commands.spawn((Camera3dBundle {

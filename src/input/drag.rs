@@ -42,14 +42,23 @@ fn select_card(
         );
         let mouse_posn = mouse.get_posn();
         if mouse_posn == card_bounds.closest_point(mouse_posn) {
-            selected.0 = Some((e, zone.clone(), *z_idx));
-            ev_zu.send(ZoneUpdate {
-                entity: e,
-                zone: zone.clone(),
-                joining: false,
-                index: z_idx.0,
-            });
+            let mut replace = true;
+            if let Some((_, _, cur_idx)) = selected.0 {
+                replace = z_idx.0 < cur_idx.0;
+            }
+
+            if replace {
+                selected.0 = Some((e, zone.clone(), *z_idx));
+            }
         }
+    }
+    if let Some((e, zone, z_idx)) = selected.0 {
+        ev_zu.send(ZoneUpdate {
+            entity: e,
+            zone: zone.clone(),
+            joining: false,
+            index: z_idx.0,
+        });
     }
 }
 

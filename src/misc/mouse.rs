@@ -3,14 +3,17 @@ use bevy::{
     window::PrimaryWindow,
 };
 
-use crate::camera::{CAMERA_HEIGHT, MainCamera};
+use crate::camera::MainCamera;
 
 pub struct MousePlugin;
 
 impl Plugin for MousePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Mouse>()
-            .add_systems(Update, update_mouse);
+            .add_systems(Update, (
+                    update_mouse,
+                    draw_mouse
+            ).chain());
     }
 }
 
@@ -43,8 +46,22 @@ fn update_mouse(
     // then, ask bevy to convert into world coordinates, and truncate to discard Z
     if let Some(world_position) = window.cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .map(|ray| ray.get_point(CAMERA_HEIGHT).truncate())
+        .and_then(|ray| {
+            if let Some(distance)
+                = ray.intersect_plane(Vec3::splat(0.), InfinitePlane3d::new(Vec3::Z)) {
+                    return Some(ray.get_point(distance).truncate())
+            } else {
+                return None
+            }
+        })
     {
         mouse.posn = world_position;
     }
+}
+
+fn draw_mouse(
+    mouse: Res<Mouse>,
+    mut gizmos: Gizmos,
+) {
+    gizmos.circle(mouse.get_posn().extend(0.) + Vec3::Z * 0.01, Dir3::Z, 0.2, Color::WHITE);
 }
