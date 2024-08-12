@@ -95,6 +95,6 @@ fn update_card_target(
 ) {
     let (entity, _zone, _z_idx) = selected.0.unwrap();
     if let Ok(mut target) = query.get_mut(entity) {
-        target.0 = mouse.get_posn();
+        target.0 = mouse.get_posn().extend(10.);
     }
 }

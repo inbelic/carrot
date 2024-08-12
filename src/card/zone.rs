@@ -126,7 +126,7 @@ fn rebase_updated_zones(
                 if zone == card_zone {
                     card_target.0 = zone_index_to_posn(
                         center, size, card_posn, spacing, dir, &dims.get_dims()
-                    );
+                    ).extend(0.);
                 }
             }
         }

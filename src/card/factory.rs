@@ -99,7 +99,7 @@ fn create_card(
                 transform: Transform::from_translation(posn.extend(0.)),
                      ..default()
              },
-             target: Target(posn),
+             target: Target(posn.extend(0.)),
          }).insert(ev.zone).insert(size.clone())
         .id();
 

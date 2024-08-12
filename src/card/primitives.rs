@@ -17,7 +17,7 @@ pub struct Card {
 }
 
 #[derive(Component, Debug)]
-pub struct Target(pub Vec2);
+pub struct Target(pub Vec3);
 
 #[derive(Bundle)]
 pub struct CardBundle {
@@ -55,9 +55,7 @@ fn move_card(
     mut query: Query<(&mut Transform, &Target), With<Card>>,
 ) {
     for (mut transform, target) in query.iter_mut() {
-        transform.translation =
-            transform.translation.truncate().lerp(target.0, 0.1)
-            .extend(transform.translation.z);
+        transform.translation = transform.translation.lerp(target.0, 0.1);
         let x_diff = target.0.x - transform.translation.x;
         let y_diff = transform.translation.y - target.0.y;
 
