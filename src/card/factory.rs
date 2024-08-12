@@ -60,7 +60,7 @@ impl FromWorld for FactoryState {
         let dims = world.get_resource::<CardDims>().unwrap().get_dims();
 
         let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-        let mesh = meshes.add(Cuboid::new(dims.x, dims.y, 1.0));
+        let mesh = meshes.add(Cuboid::new(dims.x, dims.y, 0.1));
 
         let mut materials = world.get_resource_mut::<Assets<StandardMaterial>>().unwrap();
         let color = Color::srgb_u8(124, 144, 255);
