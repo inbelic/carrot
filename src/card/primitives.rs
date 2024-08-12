@@ -1,6 +1,5 @@
 use bevy::{
     prelude::*,
-    sprite::MaterialMesh2dBundle,
 };
 
 pub struct CardPlugin;
@@ -23,11 +22,11 @@ pub struct Target(pub Vec2);
 #[derive(Bundle)]
 pub struct CardBundle {
     pub card: Card,
-    pub mesh: MaterialMesh2dBundle<ColorMaterial>,
+    pub mesh: PbrBundle,
     pub target: Target,
 }
 
-const CARD_WIDTH: f32 = 63.;
+const CARD_WIDTH: f32 = 10.;
 const CARD_RATIO: f32 = 1.4;
 #[derive(Resource, Debug)]
 pub struct CardDims {

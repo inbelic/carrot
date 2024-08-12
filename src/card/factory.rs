@@ -1,7 +1,6 @@
 use bevy::{
     prelude::*,
     ecs::schedule::common_conditions::on_event,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
 
 use crate::card::primitives::*;
@@ -23,12 +22,12 @@ fn factory_init(mut commands: Commands) {
 
     commands.spawn(ZoneBundle {
         zone: Zone::Hand,
-        center: ZoneCenter(Vec2::new(0., -100.)),
+        center: ZoneCenter(Vec2::new(0., -20.)),
         size: ZoneIndex(0),
     });
     commands.spawn(ZoneBundle {
         zone: Zone::Deck,
-        center: ZoneCenter(Vec2::new(500., 0.)),
+        center: ZoneCenter(Vec2::new(50., 0.)),
         size: ZoneIndex(0),
     });
     commands.spawn(ZoneBundle {
@@ -46,20 +45,19 @@ pub struct CreateCard {
 #[derive(Resource, Debug)]
 struct FactoryState {
     card_id: u16,
-    mesh: Mesh2dHandle,
-    material: Handle<ColorMaterial>,
+    mesh: Handle<Mesh>,
+    material: Handle<StandardMaterial>,
 }
 
 impl FromWorld for FactoryState {
     fn from_world(world: &mut World) -> Self {
-        // TODO: ensure card startup is first
         let dims = world.get_resource::<CardDims>().unwrap().get_dims();
 
         let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-        let mesh = Mesh2dHandle(meshes.add(Rectangle::new(dims.x, dims.y)));
+        let mesh = meshes.add(Cuboid::new(dims.x, dims.y, 1.0));
 
-        let mut materials = world.get_resource_mut::<Assets<ColorMaterial>>().unwrap();
-        let color = Color::srgb(139., 69., 19.);
+        let mut materials = world.get_resource_mut::<Assets<StandardMaterial>>().unwrap();
+        let color = Color::srgb_u8(124, 144, 255);
         let mat = materials.add(color);
 
         FactoryState {
@@ -89,7 +87,7 @@ fn create_card(
         );
         let e = commands.spawn(CardBundle {
             card: Card { id: state.card_id },
-            mesh: MaterialMesh2dBundle {
+            mesh: PbrBundle {
                 mesh: state.mesh.clone(),
                 material: state.material.clone(),
                 transform: Transform::from_translation(posn.extend(0.)),

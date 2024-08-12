@@ -9,7 +9,7 @@ mod playground;
 
 use card::{factory, primitives, zone};
 use input::drag;
-use misc::mouse;
+use misc::{camera, mouse};
 use playground::card_spawner;
 
 fn main() {
@@ -17,7 +17,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins((factory::FactoryPlugin, primitives::CardPlugin, zone::ZonePlugin))
         .add_plugins(drag::DragPlugin)
-        .add_plugins(mouse::MousePlugin)
+        .add_plugins((camera::CameraPlugin, mouse::MousePlugin))
         .add_plugins(card_spawner::CSPlugin)
         .run();
 }

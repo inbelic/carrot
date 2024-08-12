@@ -82,7 +82,7 @@ fn update_card_indices(
     }
 }
 
-const CARD_SPACING: f32 = 20.;
+const CARD_SPACING: f32 = 5.;
 
 pub fn zone_index_to_posn(
     center: &ZoneCenter,

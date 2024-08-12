@@ -3,18 +3,15 @@ use bevy::{
     window::PrimaryWindow,
 };
 
+use crate::camera::{CAMERA_HEIGHT, MainCamera};
+
 pub struct MousePlugin;
 
 impl Plugin for MousePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Mouse>()
-            .add_systems(Startup, setup)
             .add_systems(Update, update_mouse);
     }
-}
-
-fn setup(mut commands: Commands) {
-    commands.spawn((Camera2dBundle::default(), MainCamera));
 }
 
 #[derive(Resource, Debug, Default)]
@@ -27,9 +24,6 @@ impl Mouse {
         self.posn
     }
 }
-
-#[derive(Component)]
-struct MainCamera;
 
 fn update_mouse(
     mut mouse: ResMut<Mouse>,
@@ -49,7 +43,7 @@ fn update_mouse(
     // then, ask bevy to convert into world coordinates, and truncate to discard Z
     if let Some(world_position) = window.cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .map(|ray| ray.origin.truncate())
+        .map(|ray| ray.get_point(CAMERA_HEIGHT).truncate())
     {
         mouse.posn = world_position;
     }
