@@ -63,5 +63,5 @@ fn draw_mouse(
     mouse: Res<Mouse>,
     mut gizmos: Gizmos,
 ) {
-    gizmos.circle(mouse.get_posn().extend(0.) + Vec3::Z * 0.01, Dir3::Z, 0.2, Color::WHITE);
+    gizmos.circle(mouse.get_posn().extend(0.) + Vec3::Z * 0.1, Dir3::Z, 1.0, Color::WHITE);
 }
