@@ -55,17 +55,17 @@ fn move_card(
     mut query: Query<(&mut Transform, &Target), With<Card>>,
 ) {
     for (mut transform, target) in query.iter_mut() {
-        transform.translation = transform.translation.lerp(target.0, 0.1);
         let x_diff = target.0.x - transform.translation.x;
         let y_diff = transform.translation.y - target.0.y;
 
-        let target = if x_diff.abs() + y_diff.abs() < 0.01 {
+        let rot_target = if x_diff.abs() + y_diff.abs() < 0.01 {
             Quat::IDENTITY
         } else {
             let x_rot = Quat::from_rotation_x(y_diff * 0.02);
             let y_rot = Quat::from_rotation_y(x_diff * 0.02);
             x_rot.mul_quat(y_rot)
         };
-        transform.rotation = transform.rotation.slerp(target, 0.1);
+        transform.rotation = transform.rotation.slerp(rot_target, 0.1);
+        transform.translation = transform.translation.lerp(target.0, 0.1);
     }
 }

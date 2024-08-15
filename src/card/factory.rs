@@ -62,9 +62,15 @@ impl FromWorld for FactoryState {
         let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
         let mesh = meshes.add(Cuboid::new(dims.x, dims.y, 0.1));
 
+        let asset_server = world.get_resource::<AssetServer>().unwrap();
+        let sprite: Handle<Image> = asset_server.load("card-back.png");
+
         let mut materials = world.get_resource_mut::<Assets<StandardMaterial>>().unwrap();
-        let color = Color::srgb_u8(124, 144, 255);
-        let mat = materials.add(color);
+        let mat = materials.add(StandardMaterial {
+            base_color: Color::WHITE,
+            base_color_texture: Some(sprite),
+            ..default()
+        });
 
         FactoryState {
             card_id: 0,
@@ -96,10 +102,10 @@ fn create_card(
             mesh: PbrBundle {
                 mesh: state.mesh.clone(),
                 material: state.material.clone(),
-                transform: Transform::from_translation(posn.extend(0.)),
+                transform: Transform::from_translation(posn),
                      ..default()
              },
-             target: Target(posn.extend(0.)),
+             target: Target(posn),
          }).insert(ev.zone).insert(size.clone())
         .id();
 

@@ -36,6 +36,7 @@ fn select_card(
     mut selected: ResMut<Selected>,
     query: Query<(Entity, &Transform, &Aabb, &Zone, &ZoneIndex), With<Card>>
 ) {
+    let mut top = None;
     for (e, transform, aabb, zone, z_idx) in query.iter() {
         let card_bounds = Aabb2d::new(
             transform.translation.truncate(), aabb.half_extents.truncate()
@@ -43,12 +44,13 @@ fn select_card(
         let mouse_posn = mouse.get_posn();
         if mouse_posn == card_bounds.closest_point(mouse_posn) {
             let mut replace = true;
-            if let Some((_, _, cur_idx)) = selected.0 {
-                replace = z_idx.0 < cur_idx.0;
+            if let Some(top) = top {
+                replace = top < transform.translation.z;
             }
 
             if replace {
                 selected.0 = Some((e, zone.clone(), *z_idx));
+                top = Some(transform.translation.z);
             }
         }
     }
@@ -95,6 +97,6 @@ fn update_card_target(
 ) {
     let (entity, _zone, _z_idx) = selected.0.unwrap();
     if let Ok(mut target) = query.get_mut(entity) {
-        target.0 = mouse.get_posn().extend(10.);
+        target.0 = mouse.get_posn().extend(0.);
     }
 }

@@ -97,17 +97,16 @@ pub fn zone_index_to_posn(
     spacing: &ZoneSpacing,
     dir: &ZoneDir,
     card_dims: &Vec2,
-) -> Vec2 {
+) -> Vec3 {
     match dir {
         ZoneDir::Horiz => {
             let width = card_dims.x + spacing.0;
             let steps = size.0 as f32 / 2. - 0.5;
             let x = center.0.x + (index.0 as f32 - steps) * width;
-            Vec2::new(x, center.0.y)
+            Vec3::new(x, center.0.y, -10.)
         },
         ZoneDir::Vert => {
-            let y = center.0.y - (index.0 as f32) * spacing.0;
-            Vec2::new(center.0.x, y)
+            Vec3::new(center.0.x, center.0.y, index.0 as f32 * 0.01 - 10.)
         },
     }
 }
@@ -126,7 +125,7 @@ fn rebase_updated_zones(
                 if zone == card_zone {
                     card_target.0 = zone_index_to_posn(
                         center, size, card_posn, spacing, dir, &dims.get_dims()
-                    ).extend(0.);
+                    );
                 }
             }
         }
@@ -151,10 +150,9 @@ pub fn within_zone(
             *posn == zone_bounds.closest_point(*posn)
         },
         ZoneDir::Vert => {
-            let half_height = (card_dims.y + (size.0 as f32) * spacing.0) / 2.;
             let zone_bounds = Aabb2d::new(
-                Vec2::new(center.0.x, center.0.y - half_height),
-                Vec2::new(card_dims.x / 2., half_height)
+                Vec2::new(center.0.x, center.0.y),
+                Vec2::new(card_dims.x / 2., card_dims.y / 2.)
             );
             *posn == zone_bounds.closest_point(*posn)
         },
